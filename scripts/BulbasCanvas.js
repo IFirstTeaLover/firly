@@ -2,22 +2,26 @@ const canvas = document.getElementById("gameCanvas")
 const ctx = canvas.getContext("2d")
 var imagesBuffer = []
 var settings
-function rect(x, y, w, h, fillColor, strokeColor, strokeSize, round) {
+function rect(x, y, w, h, fillColor, strokeColor, strokeSize, round, centered) {
     try {
         ctx.beginPath()
         ctx.strokeStyle = strokeColor
         ctx.fillStyle = fillColor
         ctx.lineWidth = strokeSize
 
+        pasteX = x
+        pasteY = y
+        if (centered) pasteX = x - w/2; pasteY = y - h/2
         if (round > 0) {
-
-            ctx.roundRect(x, y, w, h, round)
+            ctx.roundRect(pasteX, pasteY, w, h, round)
         } else {
-            ctx.rect(x, y, w, h)
+            ctx.rect(pasteX, pasteY, w, h)
         }
 
         ctx.fill()
-        ctx.stroke()
+        if (strokeColor, strokeSize){
+            ctx.stroke()
+        }
         ctx.closePath()
     } catch (e) {
         console.warn(e)
@@ -57,7 +61,7 @@ function image(imageSource, x, y) {
         imagesBuffer.push(thisImage)
     }
 
-    ctx.drawImage(thisImage, x, y)
+    ctx.drawImage(thisImage, x - thisImage.width/2, y - thisImage.height / 2)
 }
 
 function addBufferImage(source) {
@@ -80,17 +84,31 @@ function addBufferImage(source) {
     } catch (e) { console.warn(e) }
 }
 
-function drawImageFromBuffer(id, x, y) {
-    try { ctx.drawImage(imagesBuffer[id], x, y); } catch (e) { console.warn(e) }
+function bufferImageInfo(id, info){
+    if (info == "w"){
+        return imagesBuffer[id].width
+    }
+    if (info == "h"){
+        return imagesBuffer[id].height
+    }
 }
 
-function path(points, color, thickness) {
+function drawImageFromBuffer(id, x, y, w, h) {
+    if (w == undefined) w = id.width
+    if (h == undefined) h = id.height
+    try { ctx.drawImage(imagesBuffer[id], x - imagesBuffer[id].width/2, y - imagesBuffer[id].height / 2, w, h); } catch (e) { console.warn(e) }
+}
+
+function path(points, color, thickness, cap) {
     ctx.beginPath()
     ctx.strokeStyle = color
+    ctx.lineCap = cap
+    if (cap === undefined)ctx.lineCap = 'round'
+
     ctx.lineWidth = thickness
     ctx.moveTo(points[0].x, points[0].y)
     points.forEach(i => {
-        ctx.lineTo(points[i].x, points[i].y)
+        ctx.lineTo(i.x, i.y)
     });
     ctx.stroke()
     ctx.closePath()
@@ -105,12 +123,42 @@ function canvasResized() {
     engineSettings(settings)
 }
 
-function getPrefferedAxis() {
+function getPrefferedAxis(h,w) {
+    let renderHeight = h
+    let renderWidth = w
     try {
         if (renderHeight > renderWidth) {
             prefAX = renderHeight
         } else {
             prefAX = renderWidth
         }
-    }catch(e){"Failed to get preffered Axis: " + e + " Most likely caused by render.js not being loaded yet"}
+    }catch(e){console.log("Failed to get preffered Axis: " + e + ", Most likely caused by render.js not being loaded yet")}
+}
+
+function nineSlice(imageSRC, sliceSize){
+    let image = new Image()
+    image.src = imageSRC
+    const w = image.width
+    const h = image.height
+    const L = sliceSize.L
+    const R = sliceSize.R
+    const B = sliceSize.B
+    const T = sliceSize.T
+
+    const sliced = {
+        tl: [0, 0, L, T],
+        t:  [L, 0, w - L - R, T],
+        tr: [w - R, 0, R, T],
+
+        l:  [0, T, L, h - T - B],
+        c:  [L, T, w - L - R, h - T - B],
+        r:  [w - R, T, R, h - T - B],
+
+        bl: [0, h - B, L, B],
+        b:  [L, h - B, w - L - R, B],
+        br: [w - R, h - B, R, B],
+        //You will never undestand this hahaha
+    }
+    image.remove()
+    return sliced
 }
