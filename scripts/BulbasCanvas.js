@@ -93,10 +93,17 @@ function bufferImageInfo(id, info){
     }
 }
 
-function drawImageFromBuffer(id, x, y, w, h) {
-    if (w == undefined) w = id.width
-    if (h == undefined) h = id.height
-    try { ctx.drawImage(imagesBuffer[id], x - imagesBuffer[id].width/2, y - imagesBuffer[id].height / 2, w, h); } catch (e) { console.warn(e) }
+function drawImageFromBuffer(id, x, y, w, h, c) {
+    let iw = w
+    let ih = h
+    if (w == undefined) iw = id.width
+    if (h == undefined) ih = id.height
+    if (c){
+        try { ctx.drawImage(imagesBuffer[id], x, y, iw, ih); } catch (e) { console.warn(e) }
+    }else{
+        try { ctx.drawImage(imagesBuffer[id], x, y, iw, ih); } catch (e) { console.warn(e) }
+    }
+    
 }
 
 function path(points, color, thickness, cap) {
