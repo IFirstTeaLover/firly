@@ -130,9 +130,7 @@ function canvasResized() {
     engineSettings(settings)
 }
 
-function getPrefferedAxis(h,w) {
-    let renderHeight = h
-    let renderWidth = w
+function getPrefferedAxis() {
     try {
         if (renderHeight > renderWidth) {
             prefAX = renderHeight
@@ -168,4 +166,11 @@ function nineSlice(imageSRC, sliceSize){
     }
     image.remove()
     return sliced
+}
+
+function numberTo2DGrid(number, rows, columns, debug) {
+    let thisX = ((number - 1) % rows) + 1;
+    let thisY = Math.floor((number - 1) / rows) + 1;
+    if(debug) console.log("X:", thisX, "Y:", thisY);
+    return {"x": thisX, "y": thisY}
 }
